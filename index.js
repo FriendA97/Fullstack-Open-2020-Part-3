@@ -8,7 +8,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.static("build"));
-morgan.token("postBody", (req, res) => {
+morgan.token("postBody", (req) => {
   if (req.method === "POST") {
     return JSON.stringify(req.body);
   } else {
@@ -60,7 +60,7 @@ app.get("/api/persons/:id", (req, res, next) => {
     });
 });
 
-app.delete("/api/persons/:id", (req, res) => {
+app.delete("/api/persons/:id", (req, res, next) => {
   const id = req.params.id;
   Person.findByIdAndDelete(id)
     .then((result) => {
@@ -75,7 +75,7 @@ app.delete("/api/persons/:id", (req, res) => {
 app.post("/api/persons", (req, res, next) => {
   const body = req.body;
   if (body.name === undefined) {
-    return response.status(400).json({ error: "content missing" });
+    return res.status(400).json({ error: "content missing" });
   }
   const addedPerson = new Person({
     name: body.name,
@@ -100,10 +100,6 @@ app.put("/api/persons/:id", (req, res, next) => {
     .catch((error) => next(error));
 });
 
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknown endpoint" });
-};
-
 const errorHandler = (error, req, res, next) => {
   console.log(error.message);
 
@@ -117,6 +113,12 @@ const errorHandler = (error, req, res, next) => {
 };
 
 app.use(errorHandler);
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unknownEndpoint);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
